@@ -1,0 +1,325 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Modelo trabalho de conclusão de curso
+% Bacharelado em Sistemas de Informação - IFNMG - Campus Salinas
+% Version 2 (1º semestre 2021)
+%
+% Modelo adaptado de:
+% Frits Wenneker (http://www.howtotex.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+% Texto adaptado de: http://www.fea.usp.br/media/fck/File/Roteiro_para_projeto_pesquisa.pdf
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[
+	% -- opções da classe memoir --
+	12pt,				% tamanho da fonte
+	%openright,			% capítulos começam em pág ímpar (insere página vazia caso preciso)
+	twoside,			% para impressão em recto e verso. Oposto a oneside
+	a4paper,			% tamanho do papel.
+	% -- opções da classe abntex2 --
+	chapter=TITLE,		% títulos de capítulos convertidos em letras maiúsculas
+	section=TITLE,		% títulos de seções convertidos em letras maiúsculas
+	subsection=TITLE,	% títulos de subseções convertidos em letras maiúsculas
+	subsubsection=TITLE,% títulos de subsubseções convertidos em letras maiúsculas
+	% -- opções do pacote babel --
+	english,			% idioma adicional para hifenização
+	french,				% idioma adicional para hifenização
+	spanish,			% idioma adicional para hifenização
+	brazilian,			% o último idioma é o principal do documento
+	]{abntex2}
+
+% ---------------------------------
+% PACOTES
+% ---------------------------------
+%\renewcommand{\thesection}{\arabic{section}}
+
+\usepackage{lmodern}			% Usa a fonte Latin Modern
+\usepackage[T1]{fontenc}		% Selecao de codigos de fonte.
+\usepackage[utf8]{inputenc}		% Codificacao do documento (conversão automática dos acentos)
+\usepackage{indentfirst}		% Indenta o primeiro parágrafo de cada seção.
+\usepackage{color}				% Controle das cores
+\usepackage{lastpage}
+\usepackage{graphicx}			% Inclusão de gráficos
+\usepackage{microtype} 			% para melhorias de justificação
+\usepackage{multirow}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{multirow}           % Merge rows and columns in tables
+\usepackage{longtable}          % Large tables
+\usepackage{fancyvrb}           % Codes and Outputs commands
+\usepackage{listings}           % Codes and Outputs commands
+\usepackage{pdflscape}
+\usepackage{float}
+\usepackage{subfig}             % Subfigures
+\usepackage{latexsym}           % Extra symbols of Latex
+\usepackage{booktabs}
+\usepackage{enumerate}
+\usepackage{acronym}
+\usepackage[portuguese, ruled, linesnumbered]{algorithm2e}
+\usepackage[noend]{algpseudocode}
+\usepackage{xurl}
+\usepackage{hyperref}
+\Urlmuskip=0mu plus 1mu
+\usepackage{lipsum}				% To generate dummy text
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+% ---------------------------------
+% Pacotes de citações
+% ---------------------------------
+\usepackage[brazilian,hyperpageref]{backref}% Paginas com as citações na bibl
+\usepackage[alf,bibjustif]{abntex2cite}	% Citações padrão ABNT
+
+% ---------------------------------
+% Configurações do pacote backref
+% Usado sem a opção hyperpageref de backref
+\renewcommand{\backrefpagesname}{Citado na(s) página(s):~}
+% Texto padrão antes do número das páginas
+\renewcommand{\backref}{}
+% Define os textos da citação
+\renewcommand*{\backrefalt}[4]{
+	\ifcase #1 %
+		Nenhuma citação no texto.%
+	\or
+		Citado na página #2.%
+	\else
+		Citado #1 vezes nas páginas #2.%
+	\fi}%
+% ---------------------------------
+% Configurações de aparência do PDF final
+% ---------------------------------
+% alterando o aspecto da cor azul
+\definecolor{blue}{RGB}{41,5,195}
+
+% informações do PDF
+\makeatletter
+\hypersetup{
+     	%pagebackref=true,
+		pdftitle={\@title},
+		pdfauthor={\@author},
+    	pdfsubject={\imprimirpreambulo},
+	    pdfcreator={LaTeX with abnTeX2},
+		pdfkeywords={abnt}{latex}{abntex}{abntex2}{projeto de pesquisa},
+		colorlinks=true,       		% false: boxed links; true: colored links
+    	linkcolor=blue,          	% color of internal links
+    	citecolor=blue,        		% color of links to bibliography
+    	filecolor=magenta,      		% color of file links
+		urlcolor=blue,
+		bookmarksdepth=4
+}
+\makeatother
+% ---------------------------------
+% Espaçamentos entre linhas e parágrafos
+% ---------------------------------
+% O tamanho do parágrafo é dado por:
+\setlength{\parindent}{1.3cm}
+% Controle do espaçamento entre um parágrafo e outro:
+\setlength{\parskip}{0.2cm}  % tente também \onelineskip
+
+
+%-----------------------------------
+% Front pages
+%-----------------------------------
+\titulo{Modelagem Computacional versus Validação Experimental de um Sistema de Rastreamento Fotovoltaico em Salinas-MG}
+\autor{Jean Pereira Coelho}
+\local{Salinas - Minas Gerais}
+\date{\normalsize\today} % Gera automaticamente a data
+\orientador{Jamerson Jardel Macedo Nere}
+
+\instituicao{%
+ 	Instituto Federal do Norte de Minas Gerais - Campus Salinas
+ 	\par  
+ 	Bacharelado em Sistemas de Informação
+}
+
+\preambulo{Trabalho de conclusão de curso apresentado ao Curso de Bacharelado em Sistemas de Informação do Instituto Federal do Norte de Minas Gerais, como exigência para obtenção do grau de Bacharel em Sistemas de Informação.}
+
+%-----------------------------------
+% Set the final PDF
+%-----------------------------------
+\definecolor{blue}{RGB}{41,5,195} % setting the blue color
+
+% PDF informations
+\makeatletter                   
+\hypersetup{
+     	%pagebackref=true,
+		pdftitle={\@title}, 
+		pdfauthor={\@author},
+    	pdfsubject={\imprimirpreambulo},
+	    pdfcreator={LaTeX with abnTeX2},
+		pdfkeywords={abnt}{latex}{abntex}{abntex2}{trabalho acadêmico}, 
+		colorlinks=true,        % false: boxed links; true: colored links
+    	linkcolor=blue,         % color of internal links
+    	citecolor=blue,        	% color of links to bibliography
+    	filecolor=magenta,      % color of file links
+		urlcolor=blue,
+		bookmarksdepth=4
+}
+\makeatother
+
+%-----------------------------------
+% Spacing between lines and paragraphs
+%-----------------------------------
+\setlength{\parindent}{1.5cm}   % Set length of indent
+\setlength{\parskip}{0.2cm}     % Set length among the paragraphs 
+
+%Index
+\makeindex
+
+%-----------------------------------
+% Main document
+%-----------------------------------
+\usepackage{pdfpages}
+
+\begin{document}
+
+%-----------------------------------
+% Linguagem
+\selectlanguage{brazil} % Texts in pt-br
+\frenchspacing          % Remove obsolete spaces between phrases
+
+%-----------------------------------
+% Elementos pre-textuais
+\pretextual
+
+%-----------------------------------
+% Capa
+\imprimircapa                   
+
+% Folha de rosto
+\imprimirfolhaderosto
+
+\newpage
+
+%-----------------------------------
+% Dedicatória (opcional)
+\begin{dedicatoria}
+   \vspace*{\fill}
+   \centering
+   \noindent
+   \textit{Dedico este trabalho, primeiramente, a Deus, que me concedeu força, sabedoria e perseverança para superar cada desafio ao longo desta jornada.
+À minha família, pelo apoio, compreensão e incentivo incondicionais, estando sempre ao meu lado, mesmo nos momentos mais difíceis.
+Aos meus pais, em especial à minha mãe, pelo amor, dedicação e constante motivação, fundamentais para que eu acreditasse em mim e seguisse firme na busca pelos meus objetivos.
+A todos que fazem parte da minha vida e que, com afeto e presença, contribuíram para que este sonho se tornasse realidade.
+} 
+   \vspace*{\fill}
+\end{dedicatoria}
+
+%-----------------------------------
+% Agradecimentos (opcional)
+\begin{agradecimentos}
+Agradeço, primeiramente, a Deus, por conceder força, sabedoria e perseverança para enfrentar os desafios ao longo do desenvolvimento deste trabalho.
+
+Aos meus orientadores, Stanley Silva e Jamerson Jardel pela paciência, dedicação e comprometimento durante todo o período de orientação. Suas contribuições, conhecimentos e direcionamentos foram essenciais para a realização e conclusão deste trabalho.
+
+Aos professores do curso, por compartilharem seus conhecimentos e contribuírem significativamente para minha formação acadêmica e profissional.
+
+Aos amigos e colegas que acompanharam esta jornada acadêmica, pelo apoio, incentivo e colaboração ao longo do processo, tornando os desafios mais leves e as conquistas mais significativas.
+
+A todos que, direta ou indiretamente, contribuíram para a execução deste trabalho, o meu sincero agradecimento.
+
+\end{agradecimentos}
+
+%-----------------------------------
+% Epígrafe (opcional)
+\begin{epigrafe}
+    \vspace*{\fill}
+    \begin{flushright}
+        \textit{“Estamos diante de uma transição energética inevitável.”}
+
+        — Fatih Birol
+    \end{flushright}
+\end{epigrafe}
+
+%-----------------------------------
+% Resumo (em português)
+\setlength{\absparsep}{18pt} % set spacing between the paragraphs
+
+\begin{resumo} 
+	
+	Este trabalho apresenta o desenvolvimento e a avaliação de um sistema fotovoltaico automatizado de baixo custo baseado na plataforma Arduino, com o objetivo de desenvolver e validar um modelo computacional capaz de representar o comportamento de um protótipo físico de rastreamento solar. Para isso, foi construído um sistema automatizado composto por um painel fotovoltaico de eixo único, microcontrolador Arduino Uno, servo motor, sensores de tensão e corrente, módulo de relógio em tempo real (RTC), display LCD e módulo de armazenamento em cartão microSD, permitindo a aquisição, o processamento e o armazenamento automático dos dados experimentais. Paralelamente, foi desenvolvido um modelo computacional no ambiente \textit{MATLAB/Simulink}, adaptado a partir de um modelo existente na literatura, para simular o comportamento do sistema fotovoltaico. Os ensaios experimentais foram realizados entre os dias 23 e 26 de maio de 2026, no período compreendido entre 06h00 e 18h00, comparando o desempenho do sistema automatizado com o de um sistema fotovoltaico de painel fixo sob as mesmas condições ambientais. Os resultados experimentais demonstraram que o sistema automatizado apresentou ganho médio de tensão de 21,50\%, ganho médio de potência de 29,39\% e ganho energético médio de aproximadamente 29,69\% em relação ao sistema de painel fixo. Na simulação computacional, o modelo apresentou ganho energético de aproximadamente 23,94\%. A comparação entre os resultados obtidos experimentalmente e aqueles fornecidos pelo modelo computacional demonstrou boa concordância quanto ao comportamento dos sistemas analisados, permitindo validar o modelo desenvolvido como uma representação adequada do protótipo físico. Dessa forma, conclui-se que o modelo computacional pode ser utilizado como ferramenta de apoio para a análise e avaliação do desempenho de sistemas fotovoltaicos automatizados, reduzindo a necessidade de ensaios experimentais preliminares e contribuindo para estudos voltados ao aumento da geração de energia por meio da otimização do posicionamento dos painéis fotovoltaicos. 
+	
+\textbf{Palavras-chave:} energia solar fotovoltaica; Arduino; MATLAB/Simulink; modelagem computacional; validação experimental; sistema fotovoltaico automatizado.
+\end{resumo}
+
+%-----------------------------------
+% Abstract (in English) (opcional)
+\begin{resumo}[Abstract]
+\begin{otherlanguage*}{english}
+
+	This work presents the development and evaluation of a low-cost automated photovoltaic system based on the Arduino platform, aiming to develop and validate a computational model capable of representing the behavior of a physical solar tracking prototype. To achieve this, an automated system was built consisting of a single-axis photovoltaic panel, Arduino Uno microcontroller, servo motor, voltage and current sensors, real-time clock (RTC) module, LCD display, and microSD storage module, enabling the automatic acquisition, processing, and storage of experimental data. In parallel, a computational model was developed in the MATLAB/Simulink environment, adapted from an existing model in the literature to simulate the behavior of the photovoltaic system. The experimental tests were carried out from May 23 to 26, 2026, between 6:00 a.m. and 6:00 p.m., comparing the performance of the automated system with that of a fixed photovoltaic panel under the same environmental conditions. The experimental results showed that the automated system achieved an average voltage gain of 21.50\%, an average power gain of 29.39\%, and an average energy gain of approximately 29.69\% compared with the fixed-panel system. In the computational simulation, the model predicted an energy gain of approximately 23.94\%. The comparison between the experimental results and the computational simulation showed good agreement regarding the behavior of the analyzed systems, allowing the validation of the developed computational model as an adequate representation of the physical prototype. Therefore, the proposed model can be used as a supporting tool for the analysis and evaluation of automated photovoltaic systems, contributing to studies focused on increasing energy generation through the optimization of photovoltaic panel positioning. 
+
+\keywords{photovoltaic solar energy; Arduino; MATLAB/Simulink; computational modeling; experimental validation; automated photovoltaic system.} 
+\end{otherlanguage*}
+\end{resumo}
+
+%-----------------------------------
+% Lista de figuras
+\pdfbookmark[0]{\listfigurename}{lof}
+\listoffigures*
+\cleardoublepage
+
+%-----------------------------------
+% Lista de tabelas
+\pdfbookmark[0]{\listtablename}{lot}
+\listoftables*
+\cleardoublepage
+
+%-----------------------------------
+% Abreviações (opcional)
+\input{pre-textuais/sigla}
+\cleardoublepage
+
+%-----------------------------------
+% Símbolos (opcional)
+\input{pre-textuais/simbolos}
+\cleardoublepage
+
+%-----------------------------------
+% Sumário
+\pdfbookmark[0]{\contentsname}{toc}
+\tableofcontents*
+\cleardoublepage
+
+
+%-----------------------------------
+% TEXTUAL ELEMENTS
+%-----------------------------------
+\textual
+
+%-----------------------------------
+% Chapters
+\include{Capitulos/cap1_introducao}
+\include{Capitulos/cap2_revisao}
+\include{Capitulos/cap3_metodologia}
+%\include{Capitulos/cap4_Desenvolvimento_do_sistema}
+\include{Capitulos/cap5_resultados}
+\include{Capitulos/cap6_conclusao}
+
+%-----------------------------------
+% Finaliza a parte no bookmark do PDF
+% para que se inicie o bookmark na raiz
+% e adiciona espaço de parte no Sumário
+\phantompart
+
+%-----------------------------------
+% Bibliografia
+\bibliography{referencias.bib}
+
+
+%-----------------------------------
+% POST-TEXTUAL ELEMENTS
+%-----------------------------------
+\postextual
+
+% Anexos
+\include{pos-textuais/anexos}
+
+% Apêndice
+\include{pos-textuais/apendice}
+
+
+\end{document}

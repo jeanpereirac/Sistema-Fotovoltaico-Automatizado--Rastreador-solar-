@@ -1,0 +1,685 @@
+% Elemento opcional
+%-----------------------------------
+%====================================================
+% APÊNDICES
+% Material elaborado pelo autor
+%====================================================
+
+\begin{apendicesenv}
+
+\partapendices
+
+\chapter{Código-Fonte do Sistema Embarcado em Arduino}
+
+Neste apêndice, apresenta-se o código-fonte desenvolvido para o controle do sistema automatizado. O algoritmo contempla as rotinas de leitura dos sensores, acionamento do servo motor, registro de dados e exibição das informações em display LCD. Com o objetivo de facilitar a compreensão, o código foi integralmente comentado, descrevendo detalhadamente o funcionamento de cada etapa do sistema.
+
+% \input{pos-textuais/codigo_arduino.tex}
+\begin{verbatim}
+
+
+
+ 
+// Sistema com Otimização 
+
+
+#include <Wire.h>
+#include <RTClib.h>
+#include <Servo.h>
+#include <LiquidCrystal_I2C.h>
+#include <SPI.h>
+#include <SD.h>
+
+RTC_DS1307 rtc;
+Servo servoMotor;
+LiquidCrystal_I2C lcd(0x27,16,2);
+File dataFile;
+
+#define SERVO_PIN   3
+#define VOLT_PIN    A3
+#define ACS712_PIN  A0
+#define SD_CS       4
+
+char nomeTXT[] = "LOG.TXT";
+
+float anguloAtual = 90;
+float anguloAlvo  = 90;
+
+unsigned long tempoAnterior   = 0;
+unsigned long tempoGravacao   = 0;
+unsigned long tempoOtimizacao = 0;
+
+int tela = 0;
+
+float tensaoFiltrada  = 0;
+float correnteFiltrada = 0;
+
+int anguloInicio = 25;
+int anguloMeio   = 90;
+int anguloFim    = 150;
+
+
+// FUNÇÃO: calcularAngulo()
+// Calcula o ângulo teórico do painel conforme o horário atual.
+
+float calcularAngulo(DateTime now)
+{
+    int minutosAtual = now.hour()*60 + now.minute();
+
+    int inicio = 6*60;
+    int meio   = 12*60;
+    int fim    = 18*60;
+
+    if(minutosAtual < inicio)
+        return anguloInicio;
+
+    if(minutosAtual <= meio)
+    {
+        float p = (float)(minutosAtual-inicio)/(meio-inicio);
+        return anguloInicio + p*(anguloMeio-anguloInicio);
+    }
+
+    if(minutosAtual <= fim)
+    {
+        float p = (float)(minutosAtual-meio)/(fim-meio);
+        return anguloMeio + p*(anguloFim-anguloMeio);
+    }
+
+    return anguloInicio;
+}
+
+
+// FUNÇÃO: atualizarServo()
+// Realiza deslocamento gradual para evitar movimentos bruscos.
+
+void atualizarServo()
+{
+    float diferenca = anguloAlvo - anguloAtual;
+
+    if(abs(diferenca) > 0.2)
+    {
+        float passo = diferenca * 0.03;
+
+        if(passo > 1) passo = 1;
+        if(passo < -1) passo = -1;
+
+        anguloAtual += passo;
+        servoMotor.write((int)anguloAtual);
+    }
+}
+
+
+ //  FUNÇÃO: lerTensao()
+
+float lerTensao()
+{
+    long soma = 0;
+
+    for(int i=0;i<10;i++)
+    {
+        soma += analogRead(VOLT_PIN);
+        delay(2);
+    }
+
+    float media = soma/10.0;
+
+    return media*(5.0/1023.0)*5.0;
+}
+
+
+ // FUNÇÃO: lerCorrente()
+
+float lerCorrente()
+{
+    long soma = 0;
+
+    for(int i=0;i<20;i++)
+    {
+        soma += analogRead(ACS712_PIN);
+        delay(2);
+    }
+
+    float media = soma/20.0;
+
+    float corrente =
+        (media - 512) *
+        (5.0/1023.0) /
+        0.185;
+
+    if(corrente < 0)
+        corrente = 0;
+
+    return corrente;
+}
+
+
+// FUNÇÃO: medirPotencia()
+
+float medirPotencia()
+{
+    return lerTensao() * lerCorrente();
+}
+
+
+// FUNÇÃO: otimizarAngulo()
+// Busca o melhor ângulo baseado na potência gerada.
+
+float otimizarAngulo(float anguloBase)
+{
+    float melhorAngulo = anguloBase;
+    float melhorPotencia = 0;
+
+    for(int ajuste=-10; ajuste<=10; ajuste+=3)
+    {
+        float anguloTeste = anguloBase + ajuste;
+
+        if(anguloTeste < 0) anguloTeste = 0;
+        if(anguloTeste > 180) anguloTeste = 180;
+
+        servoMotor.write((int)anguloTeste);
+
+        delay(300);
+
+        float potencia = medirPotencia();
+
+        if(potencia > melhorPotencia)
+        {
+            melhorPotencia = potencia;
+            melhorAngulo = anguloTeste;
+        }
+    }
+
+    return melhorAngulo;
+}
+
+
+// FUNÇÃO: salvarSD()
+// Registra data, hora, tensão, corrente, potência e ângulo.
+
+void salvarSD(DateTime now,float V,float I,float P,float A)
+{
+    dataFile = SD.open(nomeTXT, FILE_WRITE);
+
+    if(dataFile)
+    {
+        dataFile.print(now.day());
+        dataFile.print('/');
+        dataFile.print(now.month());
+        dataFile.print('/');
+        dataFile.print(now.year());
+        dataFile.print(' ');
+
+        dataFile.print(now.hour());
+        dataFile.print(':');
+        dataFile.print(now.minute());
+
+        dataFile.print(" V=");
+        dataFile.print(V,1);
+
+        dataFile.print(" I=");
+        dataFile.print(I,2);
+
+        dataFile.print(" P=");
+        dataFile.print(P,1);
+
+        dataFile.print(" A=");
+        dataFile.println((int)A);
+
+        dataFile.close();
+    }
+}
+
+void setup()
+{
+    Serial.begin(9600);
+
+    Wire.begin();
+    rtc.begin();
+
+    lcd.init();
+    lcd.backlight();
+
+    servoMotor.attach(SERVO_PIN);
+
+    DateTime now = rtc.now();
+
+    anguloAtual = calcularAngulo(now);
+    anguloAlvo  = anguloAtual;
+
+    servoMotor.write((int)anguloAtual);
+
+    if(!SD.begin(SD_CS))
+    {
+        lcd.print("Erro SD");
+        while(1);
+    }
+
+    lcd.print("Sistema OK");
+    delay(1500);
+    lcd.clear();
+}
+
+void loop()
+{
+    DateTime now = rtc.now();
+
+    float anguloBase = calcularAngulo(now);
+
+// tempo para fazer verificaçao de melhor angulo a cada 10 minutos
+
+    if(millis()-tempoOtimizacao >= 600000) 
+    {
+        tempoOtimizacao = millis();
+        anguloAlvo = otimizarAngulo(anguloBase);
+    }
+
+    atualizarServo();
+
+    float tensao = lerTensao();
+    float corrente = lerCorrente();
+
+    tensaoFiltrada =
+        tensaoFiltrada*0.9 +
+        tensao*0.1;
+
+    correnteFiltrada =
+        correnteFiltrada*0.9 +
+        corrente*0.1;
+
+    float potencia =
+        tensaoFiltrada *
+        correnteFiltrada;
+
+    if(now.hour() >= 6 && now.hour() < 18)
+    {
+        if(millis()-tempoGravacao >= 60000)
+        {
+            tempoGravacao = millis();
+
+            salvarSD(
+                now,
+                tensaoFiltrada,
+                correnteFiltrada,
+                potencia,
+                anguloAtual
+            );
+        }
+    }
+
+    if(millis()-tempoAnterior > 3000)
+    {
+        tela++;
+
+        if(tela > 1)
+            tela = 0;
+
+        tempoAnterior = millis();
+
+        lcd.clear();
+    }
+
+    if(tela == 0)
+    {
+        lcd.setCursor(0,0);
+        lcd.print(now.day());
+        lcd.print('/');
+        lcd.print(now.month());
+        lcd.print(' ');
+        lcd.print(now.hour());
+        lcd.print(':');
+        lcd.print(now.minute());
+
+        lcd.setCursor(0,1);
+        lcd.print("ANG:");
+        lcd.print((int)anguloAtual);
+    }
+
+    if(tela == 1)
+    {
+        lcd.setCursor(0,0);
+        lcd.print("V=");
+        lcd.print(tensaoFiltrada,1);
+
+        lcd.print(" I=");
+        lcd.print(correnteFiltrada,2);
+
+        lcd.setCursor(0,1);
+        lcd.print("P=");
+        lcd.print(potencia,1);
+    }
+
+    delay(200);
+}
+
+
+
+\end{verbatim}
+
+\chapter{Script de Simulação Desenvolvido no MATLAB}
+
+Neste apêndice é apresentado o script utilizado para a geração automática do modelo computacional no ambiente \textit{MATLAB/Simulink}, empregado na comparação entre um sistema fotovoltaico fixo e um sistema com automação. O código foi estruturado e comentado com o objetivo de facilitar a compreensão de todas as etapas da modelagem, incluindo a criação dos blocos, a definição dos parâmetros, o estabelecimento das conexões e a configuração da simulação.
+
+O modelo computacional foi desenvolvido com base na metodologia proposta por Farrukh Nagi, apresentada no trabalho Fixed vs Tracking Solar Panel Output Comparison in Simulink, disponibilizado na plataforma MATLAB Central File Exchange em 2023. A proposta original consiste na comparação do desempenho de sistemas fotovoltaicos fixos e sistemas com automação por meio de uma modelagem realizada no ambiente Simulink.
+
+Para atender aos objetivos desta pesquisa, o modelo de referência foi adaptado e expandido, incorporando funcionalidades adicionais, tais como o cálculo da energia acumulada ao longo da simulação, a determinação do ganho percentual instantâneo e a avaliação do ganho energético total proporcionado pelo sistema automatizado. Além disso, foram realizadas melhorias na organização estrutural e na documentação do código, visando aumentar sua clareza, e adequação às análises desenvolvidas neste trabalho.
+
+A referência utilizada como base para o desenvolvimento do modelo é apresentada a seguir:
+
+NAGI, Farrukh. Fixed vs Tracking Solar Panel Output Comparison in Simulink. MATLAB Central File Exchange, 2023.
+
+Disponível em: https://www.mathworks.com/matlabcentral/fileexchange/123655-fixed-vs-tracking-solar-panel-output-comparison-in-simulink. Acesso em: 02 março 2026.
+
+O código original encontra-se disponibilizado sob licença BSD 3-Clause.
+
+
+
+
+\begin{verbatim}
+
+%% 
+
+clc;
+clear;
+close all;
+
+%% 
+% CRIAÇÃO DO MODELO
+%% 
+modelName = 'Sistema Automatizado';
+
+if bdIsLoaded(modelName)
+    close_system(modelName,0);
+end
+
+new_system(modelName);
+open_system(modelName);
+
+%% 
+% CONFIGURAÇÃO VISUAL
+%% 
+x  = 50;
+y  = 100;
+dx = 130;
+
+%% 
+%% 
+%
+% O bloco Clock fornece continuamente o tempo da simulação.
+%
+% O ganho pi/12 converte o tempo em radianos para utilização
+% na função seno que representa a trajetória solar.
+%
+
+add_block('simulink/Sources/Clock', ...
+    [modelName '/Tempo'], ...
+    'Position',[x y x+40 y+30]);
+
+add_block('simulink/Math Operations/Gain', ...
+    [modelName '/Graus'], ...
+    'Gain','pi/12', ...
+    'Position',[x+dx y x+dx+40 y+30]);
+
+%% 
+%  TRAJETÓRIA SOLAR
+%% 
+%
+% A posição aparente do Sol é representada por:
+%
+% f(t) = sen(pi*t/12)
+%
+% t = 0 h  -> nascer do Sol
+% t = 6 h  -> máxima incidência
+% t = 12 h -> pôr do Sol
+%
+
+add_block('simulink/Math Operations/Trigonometric Function', ...
+    [modelName '/Trajetoria_Sol'], ...
+    'Operator','sin', ...
+    'Position',[x+2*dx y x+2*dx+40 y+30]);
+
+%% 
+%  COMPONENTES DA IRRADIÂNCIA
+%% 
+%
+% Irradiância Direta = 900 W/m²
+% Irradiância Difusa = 100 W/m²
+%
+% Valor máximo total:
+%
+% 1000 W/m²
+%
+% Compatível com condições padrão de teste (STC).
+%
+
+add_block('simulink/Math Operations/Gain', ...
+    [modelName '/Luz_Difusa'], ...
+    'Gain','100', ...
+    'Position',[x+3*dx y-50 x+3*dx+40 y-20]);
+
+add_block('simulink/Math Operations/Gain', ...
+    [modelName '/Luz_Direta'], ...
+    'Gain','900', ...
+    'Position',[x+3*dx y+30 x+3*dx+40 y+60]);
+
+%% 
+%  SISTEMA FIXO
+%% 
+%
+% O sistema fixo sofre perdas associadas ao desalinhamento angular.
+%
+% O fator angular reduz a parcela de irradiância direta recebida
+% pelo módulo fotovoltaico.
+%
+
+add_block('simulink/Math Operations/Product', ...
+    [modelName '/Fator_Angulo'], ...
+    'Inputs','2', ...
+    'Position',[x+4*dx y+70 x+4*dx+40 y+110]);
+
+%% 
+%  POTÊNCIA DOS SISTEMAS
+%% 
+%
+% Tracker:
+% Potência = Direta + Difusa
+%
+% Fixo:
+% Potência = Difusa + (Direta × Fator Angular)
+%
+
+add_block('simulink/Math Operations/Add', ...
+    [modelName '/Potencia_Tracker'], ...
+    'Inputs','++', ...
+    'Position',[x+5*dx y-30 x+5*dx+40 y+10]);
+
+add_block('simulink/Math Operations/Add', ...
+    [modelName '/Potencia_Fixo'], ...
+    'Inputs','++', ...
+    'Position',[x+5*dx y+50 x+5*dx+40 y+90]);
+
+%% 
+%  GANHO INSTANTÂNEO (%)
+%% 
+
+add_block('simulink/Math Operations/Subtract', ...
+    [modelName '/Diferenca'], ...
+    'Position',[x+6*dx y+100 x+6*dx+40 y+130]);
+
+add_block('simulink/Sources/Constant', ...
+    [modelName '/Epsilon'], ...
+    'Value','0.01', ...
+    'Position',[x+6*dx y+150 x+6*dx+40 y+180]);
+
+add_block('simulink/Math Operations/Add', ...
+    [modelName '/Fixo_Seguro'], ...
+    'Inputs','++', ...
+    'Position',[x+7*dx y+120 x+7*dx+40 y+150]);
+
+add_block('simulink/Math Operations/Divide', ...
+    [modelName '/Divisao'], ...
+    'Position',[x+8*dx y+100 x+8*dx+40 y+130]);
+
+add_block('simulink/Math Operations/Gain', ...
+    [modelName '/Ganho_Percentual'], ...
+    'Gain','100', ...
+    'Position',[x+9*dx y+100 x+9*dx+40 y+130]);
+
+%% 
+%  ENERGIA ACUMULADA
+%% 
+%
+% Energia =  Potência dt
+%
+
+add_block('simulink/Continuous/Integrator', ...
+    [modelName '/Energia_Tracker'], ...
+    'Position',[x+6*dx y-30 x+6*dx+40 y]);
+
+add_block('simulink/Continuous/Integrator', ...
+    [modelName '/Energia_Fixo'], ...
+    'Position',[x+6*dx y+50 x+6*dx+40 y+80]);
+
+%% 
+%  GANHO ENERGÉTICO TOTAL (%)
+%% 
+
+add_block('simulink/Math Operations/Subtract', ...
+    [modelName '/Dif_Energia'], ...
+    'Position',[x+8*dx y+20 x+8*dx+40 y+50]);
+
+add_block('simulink/Sources/Constant', ...
+    [modelName '/Epsilon_Energia'], ...
+    'Value','0.01', ...
+    'Position',[x+8*dx y+70 x+8*dx+40 y+100]);
+
+add_block('simulink/Math Operations/Add', ...
+    [modelName '/Energia_Fixo_Seguro'], ...
+    'Inputs','++', ...
+    'Position',[x+9*dx y+50 x+9*dx+40 y+80]);
+
+add_block('simulink/Math Operations/Divide', ...
+    [modelName '/Div_Energia'], ...
+    'Position',[x+10*dx y+20 x+10*dx+40 y+50]);
+
+add_block('simulink/Math Operations/Gain', ...
+    [modelName '/Ganho_Total_Percentual'], ...
+    'Gain','100', ...
+    'Position',[x+11*dx y+20 x+11*dx+40 y+50]);
+
+%% 
+%  VISUALIZAÇÃO
+%% 
+%
+% O Scope exibirá apenas:
+%
+% • Sistema Automatizado
+% • Sistema Fixo
+%
+
+add_block('simulink/Signal Routing/Mux', ...
+    [modelName '/Mux'], ...
+    'Inputs','2', ...
+    'Position',[x+9*dx y x+9*dx+10 y+60]);
+
+add_block('simulink/Sinks/Scope', ...
+    [modelName '/Grafico_Linha'], ...
+    'Position',[x+10*dx y x+10*dx+60 y+70]);
+
+add_block('simulink/Sinks/Display', ...
+    [modelName '/Display_Ganho_Final'], ...
+    'Position',[x+12*dx y+20 x+12*dx+80 y+60]);
+
+%% 
+% CONEXÕES
+%% 
+
+add_line(modelName,'Tempo/1','Graus/1');
+add_line(modelName,'Graus/1','Trajetoria_Sol/1');
+
+add_line(modelName,'Trajetoria_Sol/1','Luz_Difusa/1');
+add_line(modelName,'Trajetoria_Sol/1','Luz_Direta/1');
+
+add_line(modelName,'Luz_Difusa/1','Potencia_Tracker/1');
+add_line(modelName,'Luz_Direta/1','Potencia_Tracker/2');
+
+add_line(modelName,'Trajetoria_Sol/1','Fator_Angulo/2');
+add_line(modelName,'Luz_Direta/1','Fator_Angulo/1');
+
+add_line(modelName,'Luz_Difusa/1','Potencia_Fixo/1');
+add_line(modelName,'Fator_Angulo/1','Potencia_Fixo/2');
+
+add_line(modelName,'Potencia_Tracker/1','Diferenca/1');
+add_line(modelName,'Potencia_Fixo/1','Diferenca/2');
+
+add_line(modelName,'Potencia_Fixo/1','Fixo_Seguro/1');
+add_line(modelName,'Epsilon/1','Fixo_Seguro/2');
+
+add_line(modelName,'Diferenca/1','Divisao/1');
+add_line(modelName,'Fixo_Seguro/1','Divisao/2');
+
+add_line(modelName,'Divisao/1','Ganho_Percentual/1');
+
+add_line(modelName,'Potencia_Tracker/1','Energia_Tracker/1');
+add_line(modelName,'Potencia_Fixo/1','Energia_Fixo/1');
+
+add_line(modelName,'Energia_Tracker/1','Dif_Energia/1');
+add_line(modelName,'Energia_Fixo/1','Dif_Energia/2');
+
+add_line(modelName,'Energia_Fixo/1','Energia_Fixo_Seguro/1');
+add_line(modelName,'Epsilon_Energia/1','Energia_Fixo_Seguro/2');
+
+add_line(modelName,'Dif_Energia/1','Div_Energia/1');
+add_line(modelName,'Energia_Fixo_Seguro/1','Div_Energia/2');
+
+add_line(modelName,'Div_Energia/1','Ganho_Total_Percentual/1');
+
+add_line(modelName,'Ganho_Total_Percentual/1','Display_Ganho_Final/1');
+
+% Scope (somente dois sinais)
+add_line(modelName,'Potencia_Tracker/1','Mux/1');
+add_line(modelName,'Potencia_Fixo/1','Mux/2');
+
+add_line(modelName,'Mux/1','Grafico_Linha/1');
+
+%% 
+% CONFIGURAÇÃO FINAL
+%% 
+
+set_param(modelName,'StopTime','12');
+
+save_system(modelName);
+
+disp('fim');
+
+
+\end{verbatim}
+
+
+\chapter{Planilhas de Coleta de Dados Experimentais}
+\label{ap:apendiceC}
+
+
+
+Apresenta-se, neste apêndice, a planilha contendo os registros coletados entre os dias 23 e 26 de maio de 2026, utilizadas na elaboração dos gráficos comparativos e no cálculo do ganho percentual de geração energética. Em razão da extensão do material e da necessidade de melhor visualização dos dados, o conteúdo será disponibilizado em formato digital por meio da plataforma Google Planilhas, acessível pelo seguinte link:
+
+\url{https://docs.google.com/spreadsheets/d/1w0S7NuJGSr731LngV5jOjr4QGPswFMuQ/edit?usp=sharing&ouid=117459411065122088317&rtpof=true&sd=true}
+
+
+\chapter{Repositório do Código-Fonte}
+\label{ap:github}
+
+Com o objetivo de favorecer a reprodutibilidade dos resultados apresentados neste trabalho, o código-fonte utilizado no desenvolvimento do modelo computacional em MATLAB/Simulink, bem como os programas desenvolvidos para o microcontrolador Arduino, foram disponibilizados em um repositório público na plataforma GitHub.
+
+O repositório pode ser acessado pelo seguinte endereço:
+
+\url{https://github.com/jeanpereirac/Sistema-Fotovoltaico-Automatizado--Rastreador-solar-}
+
+O repositório contém:
+
+\begin{itemize}
+    \item código-fonte do sistema embarcado desenvolvido para o Arduino;
+    \item modelo computacional implementado no MATLAB/Simulink;
+    \item arquivos utilizados na simulação;
+    \item documentação básica para execução dos programas.
+\end{itemize}
+
+\end{apendicesenv}

@@ -1,3 +1,4 @@
+
 # Prerequisites
 *.d
 
@@ -67,3 +68,25 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+=======
+# Arquivos auxiliares do LaTeX
+*.aux
+*.bbl
+*.blg
+*.brf
+*.idx
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.synctex
+*.synctex.gz
+*.synctex(busy)
+*.fls
+*.fdb_latexmk
+*.bcf
+*.run.xml
+
+# PDF gerado
+*.pdf

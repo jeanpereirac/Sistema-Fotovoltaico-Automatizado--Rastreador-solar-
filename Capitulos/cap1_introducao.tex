@@ -1,0 +1,24 @@
+\chapter{Introdução} 
+\label{cap1_introducao}
+
+A energia solar fotovoltaica tem assumido papel cada vez mais relevante na matriz energética mundial em razão da necessidade de ampliar a utilização de fontes renováveis e reduzir os impactos ambientais associados à geração convencional de eletricidade. No Brasil, essa fonte apresenta elevado potencial de exploração devido aos altos índices de irradiação solar distribuídos pelo território nacional e à crescente participação das fontes renováveis na matriz elétrica, que atualmente representam aproximadamente 78\% da geração de energia do país \cite{tavares2023}.
+
+Apesar desse potencial, a eficiência dos sistemas fotovoltaicos depende diretamente da orientação dos painéis em relação à incidência da radiação solar. Em sistemas convencionais, os módulos permanecem fixos durante todo o dia, fazendo com que a variação da posição aparente do Sol reduza o aproveitamento da energia disponível. Segundo Veríssimo et al. (\citeyear{verissimo2017}), essa limitação compromete o desempenho energético dos sistemas fotovoltaicos.
+
+Como alternativa para minimizar essas perdas, têm sido desenvolvidos sistemas automatizados capazes de acompanhar a trajetória aparente do Sol, ajustando continuamente a orientação dos painéis. Estudos recentes demonstram que essa estratégia pode proporcionar ganhos significativos na geração de energia Almeida (\citeyear{almeida2024}), utilizando um sistema de eixo único baseado em ESP32, obteve ganhos entre 17,51\% e 30,42\%, enquanto Moraes et al. (\citeyear{moraes2024}) observaram incremento energético de aproximadamente 37,9\% em comparação com um sistema de painel fixo.
+
+Embora esses resultados evidenciem o potencial dos sistemas automatizados, ainda são poucos os trabalhos que realizam a validação experimental de modelos computacionais por meio da comparação com dados obtidos em protótipos físicos. Essa etapa é fundamental para verificar se o modelo representa adequadamente o comportamento real do sistema e pode ser utilizado como ferramenta de apoio ao desenvolvimento e à avaliação de sistemas fotovoltaicos.
+
+Nesse contexto, este trabalho propõe o desenvolvimento de um protótipo de sistema fotovoltaico automatizado de baixo custo baseado na plataforma Arduino e de um modelo computacional implementado no ambiente MATLAB/Simulink, adaptado a partir do trabalho de Nagi \cite{nagi2023}. O protótipo físico foi utilizado para obter dados experimentais de tensão, corrente e potência, os quais foram comparados aos resultados da simulação com o objetivo de validar o modelo computacional e verificar sua capacidade de representar o comportamento observado na prática.
+
+A pesquisa foi conduzida por meio de uma abordagem quantitativa e descritiva, utilizando a prototipagem como estratégia de desenvolvimento. A construção e a avaliação do protótipo caracterizam o estudo como uma Prova de Conceito (\textit{Proof of Concept} -- PoC), demonstrando a viabilidade da abordagem proposta \cite{decastrosouza2024}. A validação experimental aumenta a confiabilidade do modelo computacional e amplia seu potencial de utilização como ferramenta de apoio à análise, ao desenvolvimento e à avaliação de sistemas fotovoltaicos automatizados, reduzindo a necessidade de ensaios físicos nas etapas iniciais de projeto.
+
+O objetivo geral deste trabalho consiste em desenvolver um protótipo de sistema fotovoltaico automatizado de baixo custo e validar um modelo computacional, por meio da comparação entre resultados simulados e experimentais, verificando sua capacidade de representar o comportamento do sistema físico.
+
+Como objetivos específicos, pretende-se:
+
+\begin{itemize}
+\item Analisar a eficiência energética de um sistema fotovoltaico automatizado;
+\item Analisar o ganho percentual de eficiência em relação a um sistema com painel fixo;
+\item Validar o modelo computacional por meio da comparação entre os resultados simulados e os dados experimentais obtidos pelo protótipo físico;
+\item Avaliar o potencial de aplicação do sistema em regiões com elevada incidência de radiação solar.
