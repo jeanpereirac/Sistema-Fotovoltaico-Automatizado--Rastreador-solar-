@@ -252,9 +252,8 @@ Sistema-Fotovoltaico-Automatizado--Rastreador-solar-/
 │   │   ├── cap1_introducao.tex
 │   │   ├── cap2_revisao.tex
 │   │   ├── cap3_metodologia.tex
-│   │   ├── cap4_Desenvolvimento_do_sistema.tex
-│   │   ├── cap5_resultados.tex
-│   │   └── cap6_conclusao.tex
+│   │   ├── cap4_resultados.tex
+│   │   └── cap5_conclusao.tex
 │   │
 │   ├── Figuras/
 │   ├── pos-textuais/
