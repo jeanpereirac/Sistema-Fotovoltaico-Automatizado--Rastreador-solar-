@@ -250,7 +250,7 @@ Sistema-Fotovoltaico-Automatizado--Rastreador-solar-/
 ├── TCC/
 │   ├── Capitulos/
 │   │   ├── cap1_introducao.tex
-│   │   ├── cap2_revisao.tex
+│   │   ├── cap2_referencial_teorico.tex
 │   │   ├── cap3_metodologia.tex
 │   │   ├── cap4_resultados.tex
 │   │   └── cap5_conclusao.tex
